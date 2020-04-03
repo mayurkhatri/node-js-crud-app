@@ -1,0 +1,83 @@
+const Joi = require('joi');
+const mongoose = require('mongoose');
+const express = require('express');
+const router = express.Router();
+
+const CustomerModel = mongoose.model('Customer', new mongoose.Schema({
+  name: {
+    type: String,
+    minlength: 2,
+    maxlength: 50,
+    required: true
+  },
+  isPremium: {
+    type: Boolean,
+    default: false
+  },
+  phoneNumber: {
+    type: String,
+    required: true,
+    minlength: 5,
+    maxlength:10
+  }
+}));
+
+router.get('/', async (req, res) => {
+    const customers = await CustomerModel.find().sort('name');
+    res.send(customers);
+});
+
+  router.post('/', async (req, res) => {
+    const { error } = validateCustomer(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    let customer = new CustomerModel({ name: req.body.name, phoneNumber: req.body.phoneNumber, isPremium: req.body.isPremium });
+    customer = await customer.save();
+
+    res.send(customer);
+  });
+
+  router.put('/:id', async (req, res) => {
+    const { error } = validateCustomer(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const customer = await CustomerModel.findByIdAndUpdate(req.params.id,
+        {
+            name: req.body.name,
+            phoneNumber: req.body.phoneNumber,
+            isPremium: req.body.isPremium
+        },
+        { new: true });
+
+    if (!customer) return res.status(404).send('The customer with the given ID was not found');
+
+    res.send(customer);
+  });
+
+  router.delete('/:id', async (req, res) => {
+    const customer = await CustomerModel.findByIdAndRemove(req.params.id);
+
+    if(!customer) return res.status(404).send('The customer with the given ID was not found');
+
+    res.send(customer);
+  });
+
+  router.get('/:id', async (req, res) => {
+    const customer = await CustomerModel.findById(req.params.id);
+
+    if(!customer) return res.status(404).send('The customer with the given ID was not found');
+
+    res.send(customer);
+  });
+
+  function validateCustomer(inputCustomer) {
+    const schema = {
+      name: Joi.string().min(2).max(50).required(),
+      phoneNumber: Joi.string().min(3).max(50).required(),
+      isPremium: Joi.boolean(),
+    };
+
+    return Joi.validate(inputCustomer, schema);
+  }
+
+module.exports = router;
