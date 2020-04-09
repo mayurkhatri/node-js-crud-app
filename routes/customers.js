@@ -50,6 +50,4 @@ const router = express.Router();
     res.send(customer);
   });
 
-
-
 module.exports = router;
