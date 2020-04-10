@@ -10,6 +10,7 @@ const User = require('../models/user');
 
 let isAuthenticated = false;
 let userName = '';
+let isAdmin = false;
 
 // create application/x-www-form-urlencoded parser
 // var urlencodedParser = bodyParser.urlencoded({ extended: false })
@@ -29,7 +30,11 @@ router.get('/register', (req, res) => { res.render('register') });
 
 router.get('/dashboard', (req, res) => {
     if(isAuthenticated){
-        return res.render('dashboard', { userName: userName });
+        if(isAdmin) {
+            return res.render('dashboard', { userName: userName });
+        } else {
+            return res.render('welcome', { userName: userName });
+        }
     } else {
         return res.redirect('/users/login');
     }
@@ -119,6 +124,7 @@ router.post('/login', (req, res, next) => {
         req.session.save(() => {
             isAuthenticated = req.isAuthenticated();
             userName = req.user.name;
+            isAdmin = req.user.isAdmin;
             res.redirect('/users/dashboard')
         });
       });

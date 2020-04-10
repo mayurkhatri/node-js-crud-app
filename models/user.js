@@ -24,6 +24,10 @@ const User = mongoose.model('User', new mongoose.Schema({
     date: {
         type: Date,
         default: Date.now
+    },
+    isAdmin: {
+        type: Boolean,
+        default: false
     }
 }));
 
